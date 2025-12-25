@@ -1,0 +1,40 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                      String   @id @default(cuid())
+  email                   String   @unique
+  timezone                String   @default("America/New_York")
+  email_reminders_enabled Boolean  @default(true)
+  onboarded               Boolean  @default(false)
+  created_at              DateTime @default(now())
+  dms                     DM[]
+
+  @@map("users")
+}
+
+model DM {
+  id            String   @id @default(cuid())
+  user_id       String
+  user          User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  name          String
+  platform      String
+  sent_date     DateTime @default(now())
+  followup_date DateTime
+  status        String   @default("Waiting")
+  note          String?  @db.Text
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  @@index([user_id, status, followup_date])
+  @@map("dms")
+}

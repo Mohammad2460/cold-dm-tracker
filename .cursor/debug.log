@@ -1,0 +1,6 @@
+{"timestamp":1766648035733,"sessionId":"debug-session","runId":"run1","location":"test-db-connection.js","message":"Starting database connection test","hypothesisId":"A"}
+{"timestamp":1766648035734,"sessionId":"debug-session","runId":"run1","location":"test-db-connection.js","message":"DATABASE_URL parsed successfully","hypothesisId":"A","data":{"protocol":"postgresql:","hostname":"db.jlgfzhawouabkesdhmjt.supabase.co","port":"5432","pathname":"/postgres","username":"postgres","hasPassword":true,"searchParams":{}}}
+{"timestamp":1766648035734,"sessionId":"debug-session","runId":"run1","location":"test-db-connection.js","message":"Attempting Prisma connection","hypothesisId":"B"}
+{"timestamp":1766648036742,"sessionId":"debug-session","runId":"run1","location":"test-db-connection.js","message":"Prisma connection successful","hypothesisId":"B","data":{"connected":true}}
+{"timestamp":1766648036967,"sessionId":"debug-session","runId":"run1","location":"test-db-connection.js","message":"Database query successful","hypothesisId":"B","data":{"queryWorked":true}}
+{"timestamp":1766648036974,"sessionId":"debug-session","runId":"run1","location":"test-db-connection.js","message":"Connection test completed","hypothesisId":"B"}
