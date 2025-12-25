@@ -42,7 +42,7 @@ export default async function OnboardingPage() {
               <div>
                 <h3 className="font-semibold mb-1">Add your first DM</h3>
                 <p className="text-sm text-muted-foreground">
-                  Click "Add DM" to track who you messaged, when you sent it, and when to follow up.
+                  Click &quot;Add DM&quot; to track who you messaged, when you sent it, and when to follow up.
                 </p>
               </div>
             </div>
@@ -52,9 +52,9 @@ export default async function OnboardingPage() {
                 <CheckCircle2 className="h-6 w-6 text-primary mt-1" />
               </div>
               <div>
-                <h3 className="font-semibold mb-1">Mark as 'In Conversation' when they reply</h3>
+                <h3 className="font-semibold mb-1">Mark as &apos;In Conversation&apos; when they reply</h3>
                 <p className="text-sm text-muted-foreground">
-                  This stops reminder emails so you don't get spammed when someone is already engaging.
+                  This stops reminder emails so you don&apos;t get spammed when someone is already engaging.
                 </p>
               </div>
             </div>
@@ -66,7 +66,7 @@ export default async function OnboardingPage() {
               <div>
                 <h3 className="font-semibold mb-1">Get reminded every morning at 8 AM</h3>
                 <p className="text-sm text-muted-foreground">
-                  You'll receive an email with all DMs due for follow-up that day. Never miss a follow-up again!
+                  You&apos;ll receive an email with all DMs due for follow-up that day. Never miss a follow-up again!
                 </p>
               </div>
             </div>

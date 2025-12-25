@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { resend } from "@/lib/resend";
-import { formatInTimeZone, startOfDay, format } from "date-fns-tz";
+import { formatInTimeZone } from "date-fns-tz";
+import { startOfDay, format } from "date-fns";
+
 
 // This endpoint should be called by a cron job (e.g., Vercel Cron)
 // It runs daily and sends reminders to users at 8 AM in their timezone
@@ -34,8 +36,7 @@ export async function GET(request: Request) {
       // Get today's date in user's timezone
       const todayInUserTz = formatInTimeZone(now, user.timezone, "yyyy-MM-dd");
       const todayStart = startOfDay(
-        new Date(`${todayInUserTz}T00:00:00`),
-        { timeZone: user.timezone }
+        new Date(`${todayInUserTz}T00:00:00`)
       );
       const todayEnd = new Date(todayStart.getTime() + 24 * 60 * 60 * 1000);
 

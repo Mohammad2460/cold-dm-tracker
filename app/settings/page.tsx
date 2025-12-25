@@ -35,7 +35,7 @@ const timezones = [
 export default async function SettingsPage({
   searchParams,
 }: {
-  searchParams: { emailReminders?: string };
+  searchParams: { emailReminders?: string; unsubscribed?: string; updated?: string };
 }) {
   const user = await getOrCreateUser();
 

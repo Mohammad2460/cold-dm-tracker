@@ -75,7 +75,7 @@ export function TimezoneConfirmation({ user }: TimezoneConfirmationProps) {
         <CardHeader>
           <CardTitle>Confirm Your Timezone</CardTitle>
           <CardDescription>
-            We detected you're in {getTimezoneName(user.timezone)}. Is this correct?
+            We detected you&apos;re in {getTimezoneName(user.timezone)}. Is this correct?
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">

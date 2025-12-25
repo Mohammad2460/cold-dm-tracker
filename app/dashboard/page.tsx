@@ -7,6 +7,7 @@ import Link from "next/link";
 import { format, startOfDay } from "date-fns";
 import { redirect } from "next/navigation";
 import { DMStatusButtons } from "@/components/dm-status-buttons";
+import type { DM } from "@prisma/client";
 
 export default async function DashboardPage() {
   const user = await getOrCreateUser();
@@ -18,8 +19,8 @@ export default async function DashboardPage() {
 
   const today = startOfDay(new Date());
 
-  let todayDMs = [];
-  let overdueDMs = [];
+  let todayDMs: DM[] = [];
+  let overdueDMs: DM[] = [];
 
   try {
     // Get DMs due today
@@ -105,7 +106,7 @@ export default async function DashboardPage() {
           <CardContent>
             {overdueDMs.length === 0 ? (
               <div className="text-center py-8">
-                <p className="text-muted-foreground">No overdue DMs. You're on top of it!</p>
+                <p className="text-muted-foreground">No overdue DMs. You&apos;re on top of it!</p>
               </div>
             ) : (
               <div className="space-y-3">
