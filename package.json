@@ -2,12 +2,12 @@
   "name": "cold-dm-tracker",
   "version": "0.1.0",
   "private": true,
-  "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
-  },
+ "scripts": {
+  "dev": "next dev",
+  "build": "next build",
+  "postinstall": "prisma generate",
+  "start": "next start"
+},
   "dependencies": {
     "@clerk/nextjs": "^5.7.5",
     "@prisma/client": "^5.19.0",
