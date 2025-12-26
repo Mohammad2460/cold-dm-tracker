@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { getOrCreateUser } from "@/lib/auth";
 import { updateUserSettings, confirmTimezone } from "@/app/actions/user";
 import { prisma } from "@/lib/prisma";
