@@ -115,7 +115,7 @@ export async function GET(request: Request) {
             `;
 
             await resend.emails.send({
-              from: "Cold DM Tracker <onboarding@resend.dev>", // Update with your verified domain
+              from: "Cold DM Tracker <reminders@applyfast.dev>", // Update with your verified domain
               to: user.email,
               subject: `You have ${dmsDueToday.length} DM${dmsDueToday.length !== 1 ? "s" : ""} due for follow-up today`,
               html,
