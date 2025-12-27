@@ -8,8 +8,8 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 
 async function testEmail() {
   const { data, error } = await resend.emails.send({
-    from: 'onboarding@resend.dev', // Fix: Use resend.dev for testing
-    to: 'peaceinmind2460@gmail.com',
+    from: 'Cold DM Tracker <reminders@applyfast.dev>',
+    to: 'mohammad1820@icloud.com',
     subject: 'Test Email from Cold DM Tracker',
     html: '<p>If you see this, email works! 🎉</p>',
   });
