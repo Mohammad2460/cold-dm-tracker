@@ -57,7 +57,7 @@ export async function GET(request: Request) {
         const userHour = parseInt(userTime, 10);
 
         // Only send if it's around 8 AM (between 7:30 and 8:30 AM)
-        if (true) {  // Temporarily allow any time for testing
+        if (userHour === 8) {
           const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/dashboard`;
           const unsubscribeUrl = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/settings?emailReminders=false`;
 
