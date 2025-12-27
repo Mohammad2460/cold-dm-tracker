@@ -4,6 +4,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import { Nav } from "@/components/nav";
 import "./globals.css";
 import { SpeedInsights } from "@vercel/speed-insights/next"
+import { Analytics } from "@vercel/analytics/next"
 
 const inter = Inter({ subsets: ["latin"] });
 
