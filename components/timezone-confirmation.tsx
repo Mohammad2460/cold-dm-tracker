@@ -36,6 +36,7 @@ const timezones = [
   { value: "Europe/London", label: "London (GMT)" },
   { value: "Europe/Paris", label: "Paris (CET)" },
   { value: "Asia/Tokyo", label: "Tokyo (JST)" },
+  { value: "Asia/Kolkata", label: "India (IST)" },
   { value: "Asia/Shanghai", label: "Shanghai (CST)" },
   { value: "Australia/Sydney", label: "Sydney (AEST)" },
 ];
