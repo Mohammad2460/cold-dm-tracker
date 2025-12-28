@@ -1,4 +1,3 @@
-cat > app/api/cron/reminders/route.ts << 'EOF'
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
@@ -13,26 +12,19 @@ export async function GET(request: Request) {
   }
 
   try {
-    // Get today's date at midnight UTC
     const today = new Date();
     today.setUTCHours(0, 0, 0, 0);
     
     const tomorrow = new Date(today);
     tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
 
-    // Get all users with email reminders enabled and DMs due today
     const users = await prisma.user.findMany({
-      where: {
-        email_reminders_enabled: true,
-      },
+      where: { email_reminders_enabled: true },
       include: {
         dms: {
           where: {
             status: "Waiting",
-            followup_date: {
-              gte: today,
-              lt: tomorrow,
-            },
+            followup_date: { gte: today, lt: tomorrow },
           },
         },
       },
@@ -42,57 +34,31 @@ export async function GET(request: Request) {
 
     for (const user of users) {
       if (user.dms.length > 0) {
-        const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://cold-dm-tracker.vercel.app"}/dashboard`;
-        const unsubscribeUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://cold-dm-tracker.vercel.app"}/settings?emailReminders=false`;
-
+        const dashboardUrl = "https://cold-dm-tracker.vercel.app/dashboard";
+        const unsubscribeUrl = "https://cold-dm-tracker.vercel.app/settings?emailReminders=false";
         const userName = user.email.split("@")[0];
-        const dmList = user.dms
-          .map(
-            (dm) => `
-            <div style="border: 1px solid #e0e0e0; border-radius: 8px; padding: 15px; margin-bottom: 15px;">
-              <h3 style="font-size: 18px; margin-bottom: 8px; margin-top: 0;">${dm.name}</h3>
-              <p style="font-size: 14px; color: #666; margin-bottom: 8px;">Platform: ${dm.platform}</p>
-              ${dm.note ? `<p style="font-size: 14px; color: #666; margin-top: 8px;">Note: ${dm.note}</p>` : ""}
-            </div>
-          `
-          )
-          .join("");
+        
+        const dmList = user.dms.map((dm) => `
+          <div style="border: 1px solid #e0e0e0; border-radius: 8px; padding: 15px; margin-bottom: 15px;">
+            <h3 style="font-size: 18px; margin-bottom: 8px; margin-top: 0;">${dm.name}</h3>
+            <p style="font-size: 14px; color: #666; margin-bottom: 8px;">Platform: ${dm.platform}</p>
+            ${dm.note ? `<p style="font-size: 14px; color: #666; margin-top: 8px;">Note: ${dm.note}</p>` : ""}
+          </div>
+        `).join("");
 
         const html = `
           <!DOCTYPE html>
           <html>
-            <head>
-              <meta charset="utf-8">
-              <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            </head>
             <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
               <h1 style="font-size: 24px; margin-bottom: 20px;">Your Daily DM Follow-ups</h1>
-              
-              <p style="font-size: 16px; margin-bottom: 20px;">
-                Hi ${userName},
-              </p>
-
-              <p style="font-size: 16px; margin-bottom: 20px;">
-                You have <strong>${user.dms.length}</strong> DM${user.dms.length !== 1 ? "s" : ""} due for follow-up today:
-              </p>
-
+              <p style="font-size: 16px; margin-bottom: 20px;">Hi ${userName},</p>
+              <p style="font-size: 16px; margin-bottom: 20px;">You have <strong>${user.dms.length}</strong> DM${user.dms.length !== 1 ? "s" : ""} due for follow-up today:</p>
+              <div style="margin-bottom: 30px;">${dmList}</div>
               <div style="margin-bottom: 30px;">
-                ${dmList}
+                <a href="${dashboardUrl}" style="display: inline-block; background-color: #000; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 6px;">View Dashboard</a>
               </div>
-
-              <div style="margin-bottom: 30px;">
-                <a href="${dashboardUrl}" style="display: inline-block; background-color: #000; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-size: 16px;">
-                  View Dashboard
-                </a>
-              </div>
-
               <hr style="border: none; border-top: 1px solid #e0e0e0; margin: 30px 0;" />
-
-              <p style="font-size: 12px; color: #999; margin-top: 20px;">
-                <a href="${unsubscribeUrl}" style="color: #999; text-decoration: underline;">
-                  Turn off daily emails
-                </a>
-              </p>
+              <p style="font-size: 12px; color: #999;"><a href="${unsubscribeUrl}" style="color: #999;">Turn off daily emails</a></p>
             </body>
           </html>
         `;
@@ -111,17 +77,9 @@ export async function GET(request: Request) {
       }
     }
 
-    return NextResponse.json({
-      success: true,
-      emailsSent,
-      message: `Sent ${emailsSent} reminder emails`,
-    });
+    return NextResponse.json({ success: true, emailsSent, message: `Sent ${emailsSent} reminder emails` });
   } catch (error) {
     console.error("Error in cron job:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
-EOF
