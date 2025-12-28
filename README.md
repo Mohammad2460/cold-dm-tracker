@@ -1,29 +1,40 @@
 # Cold DM Tracker
 
-A simple SaaS MVP for tracking cold DMs and follow-ups. Never miss a follow-up again!
+A SaaS application for tracking cold direct messages and follow-ups. Never miss a follow-up again.
 
 ## Features
 
-- ✅ Add and track cold DMs (X/Twitter, LinkedIn)
-- ✅ Dashboard with "Today" and "Overdue" sections
-- ✅ Search and filter DMs
-- ✅ Status management (Waiting, In Conversation, Won, Lost)
-- ✅ Daily email reminders at 8 AM (user's timezone)
-- ✅ CSV export
-- ✅ Mobile-responsive design
-- ✅ Timezone auto-detection on signup
-- ✅ Onboarding flow
+- Add and track cold DMs (X/Twitter, LinkedIn)
+- Dashboard with "Today" and "Overdue" sections
+- Search and filter DMs
+- Status management (Waiting, In Conversation, Won, Lost)
+- Daily email reminders at 8 AM in user's timezone
+- CSV export
+- Mobile-responsive design
+- Timezone auto-detection on signup
+- Onboarding flow
 
 ## Tech Stack
 
-- **Next.js 14** (App Router)
-- **TypeScript**
-- **Tailwind CSS** + **shadcn/ui**
-- **Prisma** + **PostgreSQL** (Supabase)
-- **Clerk** (Authentication)
-- **Resend** (Email)
+- **Framework:** Next.js 14 (App Router)
+- **Language:** TypeScript
+- **Styling:** Tailwind CSS + shadcn/ui
+- **Database:** PostgreSQL (Supabase)
+- **ORM:** Prisma
+- **Authentication:** Clerk
+- **Email:** Resend
+- **Analytics:** Vercel Analytics & Speed Insights
+- **Deployment:** Vercel
 
 ## Getting Started
+
+### Prerequisites
+
+- Node.js 18+
+- npm or yarn
+- PostgreSQL database (Supabase recommended)
+- Clerk account
+- Resend account
 
 ### 1. Install Dependencies
 
@@ -42,25 +53,26 @@ CLERK_SECRET_KEY=your_clerk_secret_key
 
 # Database (Supabase PostgreSQL)
 DATABASE_URL=your_supabase_connection_string
+DIRECT_URL=your_supabase_direct_connection_string
 
 # Resend Email
 RESEND_API_KEY=your_resend_api_key
 
-# Optional: For cron job authentication
+# Cron job authentication
 CRON_SECRET=your_secret_key_for_cron_endpoint
 
-# Optional: Your app URL (for email links)
+# App URL (for email links)
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 
 ### 3. Set Up Database
 
 1. Create a Supabase project and get your PostgreSQL connection string
-2. Update `DATABASE_URL` in `.env.local`
+2. Update `DATABASE_URL` and `DIRECT_URL` in `.env.local`
 3. Run migrations:
 
 ```bash
-npx prisma migrate dev --name init
+npx prisma migrate dev
 ```
 
 ### 4. Set Up Clerk
@@ -84,79 +96,102 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-## Setting Up Daily Email Reminders
+## Scripts
 
-The cron job endpoint is at `/api/cron/reminders`. You need to set up a cron job to call this endpoint daily.
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start development server |
+| `npm run build` | Build for production |
+| `npm run start` | Run production build |
+| `npx prisma studio` | Open Prisma database GUI |
+| `npx prisma migrate dev` | Run database migrations |
+| `npx prisma generate` | Generate Prisma Client |
 
-### Option 1: Vercel Cron (Recommended)
+## Project Structure
 
-Add this to `vercel.json`:
+```
+app/
+├── (auth)/              # Auth pages (sign-in, sign-up via Clerk)
+├── api/
+│   ├── cron/reminders/  # Daily email reminder cron endpoint
+│   └── dms/export/      # CSV export endpoint
+├── dashboard/           # Main dashboard
+├── dms/                 # DM management
+│   ├── page.tsx         # All DMs list
+│   ├── add/             # Add new DM
+│   └── [id]/            # Edit/delete DM
+├── settings/            # User preferences
+├── onboarding/          # First-time user flow
+└── actions/             # Server actions
+
+components/
+├── ui/                  # shadcn/ui components
+└── email/               # Email templates
+
+lib/                     # Utilities (auth, prisma, resend)
+prisma/                  # Database schema and migrations
+```
+
+## Database Schema
+
+**Users**
+- `id` - Unique identifier
+- `email` - User email
+- `timezone` - User timezone (default: America/New_York)
+- `email_reminders_enabled` - Email preference toggle
+- `onboarded` - Onboarding completion status
+
+**DMs**
+- `id` - Unique identifier
+- `user_id` - Foreign key to Users
+- `name` - Contact name
+- `platform` - X or LinkedIn
+- `sent_date` - When the DM was sent
+- `followup_date` - When to follow up
+- `status` - Waiting, In Conversation, Won, or Lost
+- `note` - Optional notes
+
+## Daily Email Reminders
+
+The cron job endpoint is at `/api/cron/reminders`. It sends reminder emails to users who have DMs due for follow-up.
+
+### Vercel Cron (Recommended)
+
+The cron is configured in `vercel.json`:
 
 ```json
 {
   "crons": [
     {
       "path": "/api/cron/reminders",
-      "schedule": "0 8 * * *"
+      "schedule": "0 3 * * *"
     }
   ]
 }
 ```
 
-Note: This runs at 8 AM UTC. The endpoint handles timezone conversion for each user.
+This runs at 3 AM UTC. The endpoint checks each user's timezone to send emails at 8 AM local time.
 
-### Option 2: External Cron Service
+### External Cron Service
 
-Use a service like:
-- [cron-job.org](https://cron-job.org)
-- [EasyCron](https://www.easycron.com)
+Alternatively, use a service like [cron-job.org](https://cron-job.org) or [EasyCron](https://www.easycron.com).
 
-Set it to call: `https://yourdomain.com/api/cron/reminders` daily at 8 AM UTC (or adjust the schedule).
+Set it to call: `https://yourdomain.com/api/cron/reminders`
 
-Make sure to set the `CRON_SECRET` environment variable and include it in the Authorization header:
+Include the authorization header:
 ```
 Authorization: Bearer your_cron_secret
 ```
 
-## Project Structure
-
-```
-/app
-  /(auth)          # Auth pages (handled by Clerk)
-  /dashboard       # Main dashboard
-  /dms             # All DMs list
-    /add           # Add new DM
-    /[id]          # Edit/delete DM
-  /settings        # User settings
-  /onboarding      # Onboarding flow
-  /api
-    /cron/reminders # Daily email cron job
-    /dms/export    # CSV export
-  /actions         # Server actions
-/components        # React components
-/lib               # Utilities
-/prisma            # Database schema
-```
-
-## Development
-
-- Run migrations: `npx prisma migrate dev`
-- Generate Prisma Client: `npx prisma generate`
-- View database: `npx prisma studio`
-
 ## Deployment
 
 1. Push to GitHub
-2. Deploy to Vercel
-3. Set environment variables in Vercel dashboard
-4. Set up the cron job (see above)
+2. Import project in Vercel
+3. Configure environment variables in Vercel dashboard
+4. Deploy
 
-## Next Steps (Phases 5-6)
-
-- **Phase 5**: Use the tool yourself for 2 weeks, track 20+ cold DMs, identify pain points
-- **Phase 6**: Give access to 5 users, gather feedback, validate product-market fit
+The cron job will automatically run based on `vercel.json` configuration.
 
 ## License
 
 MIT
-

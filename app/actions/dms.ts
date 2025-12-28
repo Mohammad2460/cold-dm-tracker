@@ -169,7 +169,7 @@ export async function updateDM(formData: FormData) {
     throw new Error("Failed to update DM");
   }
   
-  redirect(`/dms/${dmId}`);
+  redirect("/dms");
 }
 
 /**
