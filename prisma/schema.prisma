@@ -39,3 +39,11 @@ model DM {
   @@index([user_id, status, followup_date])
   @@map("dms")
 }
+
+model Waitlist {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+
+  @@map("waitlist")
+}
