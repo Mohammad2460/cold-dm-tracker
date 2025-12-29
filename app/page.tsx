@@ -11,7 +11,7 @@ export default async function LandingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#09090b] text-white antialiased overflow-x-hidden relative bg-grid">
+    <div className="min-h-screen bg-[#09090b] text-white antialiased overflow-x-hidden overscroll-none relative bg-grid" style={{ overscrollBehavior: 'none' }}>
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-[#09090b]">
         <div className="mx-auto max-w-6xl px-6 py-4 flex items-center justify-center">

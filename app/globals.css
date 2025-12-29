@@ -6,12 +6,6 @@ html {
   scroll-behavior: smooth;
 }
 
-html, body {
-  background-color: #09090b;
-  overflow-x: hidden;
-  overscroll-behavior: none;
-}
-
 .card-neumorphic {
   background: #212121;
   box-shadow: 15px 15px 30px rgb(25, 25, 25),
