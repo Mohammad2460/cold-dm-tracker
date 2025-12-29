@@ -11,9 +11,9 @@ export default async function LandingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#09090b] text-white antialiased overflow-x-hidden overscroll-none relative bg-grid" style={{ overscrollBehavior: 'none' }}>
+    <div className="min-h-screen bg-[#09090b] text-white antialiased overflow-x-hidden relative z-10 bg-grid">
       {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-[#09090b]">
+      <nav className="fixed top-0 left-0 right-0 z-[100] bg-[#09090b]">
         <div className="mx-auto max-w-6xl px-6 py-4 flex items-center justify-center">
           <span className="text-lg font-bold tracking-tight">Cold DM Tracker</span>
         </div>

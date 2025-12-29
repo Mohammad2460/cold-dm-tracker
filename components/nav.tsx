@@ -10,8 +10,8 @@ import { cn } from "@/lib/utils";
 export function Nav() {
   const pathname = usePathname();
 
-  // Hide nav on auth pages
-  if (pathname.startsWith("/sign-in") || pathname.startsWith("/sign-up")) {
+  // Hide nav on landing page and auth pages
+  if (pathname === "/" || pathname.startsWith("/sign-in") || pathname.startsWith("/sign-up")) {
     return null;
   }
 
