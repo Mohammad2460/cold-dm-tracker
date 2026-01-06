@@ -19,33 +19,51 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { updateDMStatus } from "@/app/actions/dms";
 import Link from "next/link";
 import { format } from "date-fns";
-import { useRouter } from "next/navigation";
+import { useAllDMs, useUpdateDMStatus, type DM } from "@/lib/queries";
+import { Loader2 } from "lucide-react";
 
-type DM = {
-  id: string;
-  name: string;
-  platform: string;
-  sent_date: Date;
-  followup_date: Date;
-  status: string;
-  note: string | null;
-};
+/**
+ * Type for tracking loading state
+ * Tracks both which DM and which action is loading
+ */
+type LoadingState = {
+  dmId: string;
+  action: "In Conversation" | "Won" | "Lost" | "Waiting";
+} | null;
 
-type DMsListProps = {
-  initialDMs: DM[];
-};
+/**
+ * Type for feedback message
+ */
+type Feedback = {
+  dmId: string;
+  type: "success" | "error";
+  message: string;
+} | null;
 
-export function DMsList({ initialDMs }: DMsListProps) {
-  const router = useRouter();
+/**
+ * DMsList Component
+ *
+ * Displays all DMs in a searchable/filterable table.
+ * Uses TanStack Query for data fetching and caching.
+ */
+export function DMsList() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
-  // Debounced search and filter
+  // Fetch all DMs using TanStack Query
+  const { data: allDMs = [], isLoading, error } = useAllDMs();
+
+  // Use the mutation hook for optimistic updates
+  const updateStatusMutation = useUpdateDMStatus();
+
+  // Track feedback message for a specific DM (for UI display)
+  const [feedback, setFeedback] = useState<Feedback>(null);
+
+  // Filter DMs based on search and status
   const filteredDMs = useMemo(() => {
-    let filtered = [...initialDMs];
+    let filtered = [...allDMs];
 
     // Search filter
     if (searchQuery) {
@@ -63,11 +81,53 @@ export function DMsList({ initialDMs }: DMsListProps) {
     }
 
     return filtered;
-  }, [initialDMs, searchQuery, statusFilter]);
+  }, [allDMs, searchQuery, statusFilter]);
 
-  const handleStatusUpdate = async (dmId: string, status: string, days?: number) => {
-    await updateDMStatus(dmId, status, days);
-    router.refresh();
+  /**
+   * Handle status update with optimistic updates
+   */
+  const handleStatusUpdate = async (
+    dmId: string,
+    status: "In Conversation" | "Won" | "Lost" | "Waiting",
+    days?: number
+  ) => {
+    // Prevent action if another is already in progress
+    if (updateStatusMutation.isPending) return;
+
+    setFeedback(null);
+
+    // Use the mutation which has optimistic updates built in
+    updateStatusMutation.mutate(
+      { dmId, status, days },
+      {
+        onSuccess: (result) => {
+          if (result.success) {
+            setFeedback({
+              dmId,
+              type: "success",
+              message: result.message || "Updated!",
+            });
+            setTimeout(() => setFeedback(null), 2000);
+          } else {
+            setFeedback({
+              dmId,
+              type: "error",
+              message: result.error || "Failed to update",
+            });
+            setTimeout(() => setFeedback(null), 3000);
+          }
+        },
+        onError: (error) => {
+          console.error("Error updating status:", error);
+          setFeedback({
+            dmId,
+            type: "error",
+            message: "Something went wrong. Please try again.",
+          });
+          setTimeout(() => setFeedback(null), 3000);
+        },
+      }
+    );
   };
 
   const getStatusBadgeVariant = (status: string) => {
@@ -85,7 +145,32 @@ export function DMsList({ initialDMs }: DMsListProps) {
     }
   };
 
-  if (initialDMs.length === 0) {
+  /**
+   * Check if buttons should be disabled
+   */
+  const isDisabled = updateStatusMutation.isPending;
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="p-4 bg-red-50 border border-red-200 rounded-md">
+        <p className="text-red-800 text-sm">
+          Failed to load DMs. Please try refreshing the page.
+        </p>
+      </div>
+    );
+  }
+
+  if (allDMs.length === 0) {
     return (
       <div className="text-center py-12">
         <div className="max-w-md mx-auto">
@@ -158,42 +243,68 @@ export function DMsList({ initialDMs }: DMsListProps) {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                      <div className="flex flex-col sm:flex-row justify-end gap-2">
-                        <Button variant="outline" size="sm" asChild>
-                          <Link href={`/dms/${dm.id}`}>Edit</Link>
-                        </Button>
-                        <div className="flex flex-wrap gap-1 justify-end">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleStatusUpdate(dm.id, "In Conversation")}
-                            className="text-xs"
-                          >
-                            In Conversation
+                      <div className="flex flex-col gap-2">
+                        <div className="flex flex-col sm:flex-row justify-end gap-2">
+                          <Button variant="outline" size="sm" asChild>
+                            <Link href={`/dms/${dm.id}`}>Edit</Link>
                           </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleStatusUpdate(dm.id, "Won")}
-                          >
-                            Won
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleStatusUpdate(dm.id, "Lost")}
-                          >
-                            Lost
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleStatusUpdate(dm.id, "Waiting", 3)}
-                            className="text-xs"
-                          >
-                            +3 days
-                          </Button>
+                          <div className="flex flex-wrap gap-1 justify-end">
+                            {/* IN CONVERSATION BUTTON */}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleStatusUpdate(dm.id, "In Conversation")}
+                              disabled={isDisabled}
+                              className="text-xs"
+                            >
+                              In Conversation
+                            </Button>
+
+                            {/* WON BUTTON */}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleStatusUpdate(dm.id, "Won")}
+                              disabled={isDisabled}
+                            >
+                              Won
+                            </Button>
+
+                            {/* LOST BUTTON */}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleStatusUpdate(dm.id, "Lost")}
+                              disabled={isDisabled}
+                            >
+                              Lost
+                            </Button>
+
+                            {/* EXTEND 3 DAYS BUTTON */}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleStatusUpdate(dm.id, "Waiting", 3)}
+                              disabled={isDisabled}
+                              className="text-xs"
+                            >
+                              +3 days
+                            </Button>
+                          </div>
                         </div>
+
+                        {/* FEEDBACK MESSAGE FOR THIS ROW */}
+                        {feedback?.dmId === dm.id && (
+                          <div
+                            className={`text-xs px-2 py-1 rounded text-right ${
+                              feedback.type === "success"
+                                ? "bg-green-50 text-green-700"
+                                : "bg-red-50 text-red-700"
+                            }`}
+                          >
+                            {feedback.message}
+                          </div>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
@@ -206,4 +317,3 @@ export function DMsList({ initialDMs }: DMsListProps) {
     </div>
   );
 }
-

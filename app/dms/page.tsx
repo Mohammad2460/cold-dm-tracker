@@ -1,23 +1,17 @@
-export const dynamic = "force-dynamic";
-
-import { prisma } from "@/lib/prisma";
 import { getOrCreateUser } from "@/lib/auth";
 import { DMsList } from "@/components/dms-list";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
+/**
+ * DMs Page (Server Component)
+ *
+ * Handles authentication, then renders the client component
+ * that fetches data using TanStack Query.
+ */
 export default async function DMsPage() {
-  const user = await getOrCreateUser();
-  
-  const dms = await prisma.dM.findMany({
-    where: {
-      user_id: user.id,
-    },
-    orderBy: {
-      followup_date: "asc",
-    },
-  });
+  // Authenticate user on the server
+  await getOrCreateUser();
 
   return (
     <div className="container mx-auto py-8 px-4">
@@ -40,7 +34,8 @@ export default async function DMsPage() {
         </div>
       </div>
 
-      <DMsList initialDMs={dms} />
+      {/* Client component fetches data with TanStack Query */}
+      <DMsList />
     </div>
   );
 }

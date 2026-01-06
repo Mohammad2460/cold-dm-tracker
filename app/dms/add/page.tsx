@@ -1,4 +1,9 @@
-import { addDM } from "@/app/actions/dms";
+"use client";
+
+import { useEffect } from "react";
+import { useFormState, useFormStatus } from "react-dom";
+import { useRouter } from "next/navigation";
+import { addDM, type FormState } from "@/app/actions/dms";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,11 +17,64 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 
+/**
+ * SubmitButton Component
+ *
+ * This component uses useFormStatus to detect when the form is being submitted.
+ * It shows different text and disabled state based on the submission status.
+ *
+ * IMPORTANT: This must be a separate component because useFormStatus only works
+ * inside a component that's a child of a <form> element.
+ */
+function SubmitButton() {
+  // useFormStatus gives us the current state of the parent form
+  const { pending } = useFormStatus();
+
+  return (
+    <Button
+      type="submit"
+      className="flex-1"
+      disabled={pending} // Disable button while form is submitting
+    >
+      {pending ? "Adding..." : "Add DM"}
+    </Button>
+  );
+}
+
+/**
+ * AddDMPage Component
+ *
+ * Client component that handles adding a new DM with proper loading and error states.
+ * Uses React's useFormState hook to manage server-side validation and error feedback.
+ */
 export default function AddDMPage() {
+  const router = useRouter();
+
   // Default followup date is 3 days from now
   const defaultDate = new Date();
   defaultDate.setDate(defaultDate.getDate() + 3);
   const defaultDateString = defaultDate.toISOString().split("T")[0];
+
+  // useFormState manages form submission state and captures server-side errors
+  // - state: contains { success, error, message } from the server action
+  // - formAction: the action to pass to the form's action prop
+  // - null: initial state before any submission
+  const [state, formAction] = useFormState<FormState, FormData>(addDM, {
+    success: false,
+  });
+
+  // Handle successful form submission
+  useEffect(() => {
+    if (state?.success) {
+      // Show success message for 1.5 seconds before redirecting
+      // This gives the user visual feedback that their action was successful
+      const timer = setTimeout(() => {
+        router.push("/dashboard");
+      }, 1500);
+
+      return () => clearTimeout(timer);
+    }
+  }, [state?.success, router]);
 
   return (
     <div className="container mx-auto py-8 px-4 max-w-2xl">
@@ -32,7 +90,33 @@ export default function AddDMPage() {
           <CardDescription>Track a new cold DM you sent</CardDescription>
         </CardHeader>
         <CardContent>
-          <form action={addDM} className="space-y-6">
+          {/*
+            SUCCESS MESSAGE
+            Show a green success message when the DM is added successfully
+          */}
+          {state?.success && state?.message && (
+            <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-md">
+              <p className="text-green-800 text-sm font-medium">{state.message}</p>
+            </div>
+          )}
+
+          {/*
+            ERROR MESSAGE
+            Show a red error message if validation fails or server error occurs
+          */}
+          {state?.error && (
+            <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-md">
+              <p className="text-red-800 text-sm font-medium">{state.error}</p>
+            </div>
+          )}
+
+          {/*
+            FORM
+            Uses formAction from useFormState instead of directly calling addDM.
+            This allows React to intercept the submission and update the state.
+          */}
+          <form action={formAction} className="space-y-6">
+            {/* NAME FIELD */}
             <div className="space-y-2">
               <Label htmlFor="name">Name *</Label>
               <Input
@@ -43,6 +127,7 @@ export default function AddDMPage() {
               />
             </div>
 
+            {/* PLATFORM FIELD */}
             <div className="space-y-2">
               <Label htmlFor="platform">Platform *</Label>
               <Select name="platform" required>
@@ -56,6 +141,7 @@ export default function AddDMPage() {
               </Select>
             </div>
 
+            {/* FOLLOW-UP DATE FIELD */}
             <div className="space-y-2">
               <Label htmlFor="followup_date">Follow-up Date *</Label>
               <Input
@@ -70,6 +156,7 @@ export default function AddDMPage() {
               </p>
             </div>
 
+            {/* NOTE FIELD */}
             <div className="space-y-2">
               <Label htmlFor="note">Note (Optional)</Label>
               <textarea
@@ -80,10 +167,14 @@ export default function AddDMPage() {
               />
             </div>
 
+            {/* ACTION BUTTONS */}
             <div className="flex gap-4">
-              <Button type="submit" className="flex-1">
-                Add DM
-              </Button>
+              {/*
+                SubmitButton component shows loading state automatically
+                It must be a separate component to use useFormStatus
+              */}
+              <SubmitButton />
+
               <Button type="button" variant="outline" asChild>
                 <Link href="/dashboard">Cancel</Link>
               </Button>
@@ -94,4 +185,3 @@ export default function AddDMPage() {
     </div>
   );
 }
-

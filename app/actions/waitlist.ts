@@ -4,7 +4,23 @@ import { prisma } from "@/lib/prisma";
 import { resend } from "@/lib/resend";
 import { getWaitlistWelcomeEmail } from "@/lib/emails/waitlist-welcome";
 
-export async function joinWaitlist(email: string): Promise<{ success: boolean; message: string }> {
+export type WaitlistResult = {
+  success: boolean;
+  message: string;
+  position?: number;
+  isExisting?: boolean;
+};
+
+export async function getWaitlistCount(): Promise<number> {
+  try {
+    return await prisma.waitlist.count();
+  } catch (error) {
+    console.error("Error getting waitlist count:", error);
+    return 0;
+  }
+}
+
+export async function joinWaitlist(email: string): Promise<WaitlistResult> {
   // Validate email
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!email || !emailRegex.test(email)) {
@@ -18,17 +34,35 @@ export async function joinWaitlist(email: string): Promise<{ success: boolean; m
     });
 
     if (existing) {
-      return { success: true, message: "You're already on the list! We'll be in touch soon." };
+      // Get their position in the waitlist
+      const position = await prisma.waitlist.count({
+        where: {
+          createdAt: { lte: existing.createdAt },
+        },
+      });
+      return { 
+        success: true, 
+        message: "You're already on the list!", 
+        position,
+        isExisting: true 
+      };
     }
 
     // Add to waitlist
-    await prisma.waitlist.create({
+    const newEntry = await prisma.waitlist.create({
       data: { email: email.toLowerCase() },
+    });
+
+    // Get their position (count of all entries up to and including theirs)
+    const position = await prisma.waitlist.count({
+      where: {
+        createdAt: { lte: newEntry.createdAt },
+      },
     });
 
     // Send welcome email (don't block on failure)
     try {
-      const { subject, html } = getWaitlistWelcomeEmail(email.toLowerCase());
+      const { subject, html } = getWaitlistWelcomeEmail(email.toLowerCase(), position);
       await resend.emails.send({
         from: "Mohammad from Cold DM Tracker <hello@applyfast.dev>",
         to: email.toLowerCase(),
@@ -40,7 +74,7 @@ export async function joinWaitlist(email: string): Promise<{ success: boolean; m
       // Don't fail the signup if email fails
     }
 
-    return { success: true, message: "You're on the list! We'll be in touch soon." };
+    return { success: true, message: "You're on the list!", position };
   } catch (error) {
     console.error("Error joining waitlist:", error);
     return { success: false, message: "Something went wrong. Please try again." };
