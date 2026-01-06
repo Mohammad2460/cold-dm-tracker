@@ -12,7 +12,7 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "Cold DM Tracker - Never Lose a Deal to Forgotten Follow-Ups",
   description: "Track your cold DMs across all platforms and get reminded automatically. Join 50+ professionals who never miss a follow-up.",
-  metadataBase: new URL('https://colddmtracker.com'),
+  metadataBase: new URL('https://applyfast.dev'),
   keywords: ["cold DM", "follow-up tracker", "sales", "outreach", "CRM", "LinkedIn", "Twitter", "freelancer"],
   authors: [{ name: "Mohammad", url: "https://twitter.com/SaaSbyMohd" }],
   creator: "Mohammad",
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     siteName: 'Cold DM Tracker',
     locale: 'en_US',
     type: 'website',
-    url: 'https://colddmtracker.com',
+    url: 'https://applyfast.dev',
   },
   twitter: {
     card: 'summary_large_image',
